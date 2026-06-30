@@ -14,9 +14,17 @@ editor (não é JSON de importação). Valores recomendados abaixo.
 
 ## Ferramentas (habilitar e liberar no canvas/flow)
 Habilitar e garantir no `enabled_tools` do flow:
-`get_available_slots`, `create_appointment`, `reschedule_appointment`, `cancel_appointment`,
-`confirm_appointment`, `move_pipeline_stage`, `add_tag`, `set_lead_custom_field`,
-`round_robin_user`, `transfer_to_user`, `trigger_notification`, `stop_agent`.
+`offer_appointment_slots` (**principal de agendamento**), `reschedule_appointment`,
+`cancel_appointment`, `confirm_appointment`, `list_lead_appointments`, `move_pipeline_stage`,
+`add_tag`, `set_lead_custom_field`, `round_robin_user`, `transfer_to_user`,
+`trigger_notification`, `stop_agent`.
+
+> **Agendamento = agenda NATIVA da plataforma (não Google Calendar).** `offer_appointment_slots`
+> manda os horários como **menu interativo** no WhatsApp; o lead **toca** e o agendamento é feito
+> sozinho (booking determinístico — não reconfirme). Se houver mais de um especialista, o menu
+> pergunta o profissional primeiro. **Pré-requisito na org:** ter o serviço `demonstracao` em
+> `agenda_services` + `availability_rules` (horários) configurados — e `user_services` se for
+> multi-especialista. **Não** precisa de `calendar_connection_id` (isso é só do `schedule_event`/Google).
 
 > ⚠️ Criar a tool ≠ tool disponível pro LLM. O runtime só expõe as que estão no `enabled_tools`
 > do **canvas** (salve o canvas). Sintoma de tool faltando: o agente diz "vou verificar" e não age.
@@ -41,8 +49,10 @@ Habilitar e garantir no `enabled_tools` do flow:
 ## Guardrails
 `max_iterations`: 5 · `timeout_seconds`: 30 · `cost_ceiling_tokens`: 20000 · `allow_human_handoff`: ligado
 
-## Placeholders do ambiente (IDs do seu CRM)
-- `calendar_connection_id` → conexão Google Calendar (necessária p/ `get_available_slots` e `create_appointment`)
+## Pré-requisitos do ambiente (no seu CRM)
+- **Agenda nativa:** serviço `demonstracao` cadastrado em `agenda_services` + `availability_rules`
+  (horários) definidos. Se houver mais de um especialista, adicionar cada um em `user_services`
+  pro serviço `demonstracao` (o menu de profissional aparece sozinho). **Sem** Google Calendar.
 - `new_lead_stage_id` → stage do funil pra lead novo
 - `on_appointment_created_stage_id` → stage quando a demo é agendada
 
@@ -63,13 +73,13 @@ Habilitar e garantir no `enabled_tools` do flow:
 ## 3. Config + tools
 - [ ] Modelo, escopo, `is_primary`, debounce, humanização, validação, followups, guardrails (valores acima).
 - [ ] Liberar as tools no `enabled_tools` do **canvas** e salvar o canvas.
-- [ ] Preencher os 3 placeholders de ambiente (calendar + stages).
+- [ ] **Agenda nativa:** serviço `demonstracao` em `agenda_services` + `availability_rules` (e `user_services` se multi-especialista) + os 2 stages do funil.
 
 ## 4. Testar (Simulador)
 - [ ] Diálogo: abertura → qualificação (3 critérios) → valor → tentativa de agendamento → fora do escopo (peça "quero falar com uma pessoa" e confirme o `stop_agent`).
 - [ ] Persona (consultiva, uma pergunta por vez, sem textão, sem travessão).
 - [ ] Peça o preço de propósito → deve recusar valor e convidar pra agendar (a validação reescreve se escapar).
-- [ ] ⚠️ O Simulador **não** executa agendamento/webhook real — teste `create_appointment` pelo **WhatsApp real**.
+- [ ] ⚠️ O Simulador **não** envia o menu interativo real — teste o `offer_appointment_slots` (menu + toque que agenda) pelo **WhatsApp real**.
 
 ## 5. Ativar
 - [ ] `status`: `draft` → `active`. Conferir a feature flag `native_agent_enabled` na org.

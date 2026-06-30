@@ -51,6 +51,11 @@ Arquivos: `packages/shared/src/ai-agent/types.ts:270-349`, `apps/crm/supabase/mi
 
 Custo por run: `calculateCostUsdCents(model, tokensIn, tokensOut)` em `cost.ts`.
 
+> ⚠️ **gpt-5 / gpt-5-mini sao modelos de reasoning** — gastam `reasoning_tokens` (cobrados como
+> output) que nao aparecem na resposta. O custo real por run pode ser bem acima do texto visivel;
+> ja houve bug de contabilizacao desses tokens. Pra fluxos simples, `gpt-5-mini` ou `gpt-4o-mini`
+> evitam o overhead de reasoning. Confirme precos/modelos em `cost.ts` antes de cotar custo.
+
 ---
 
 ## 3. Structured Prompt (editor SDR) — `structured_prompt_config`
@@ -167,6 +172,97 @@ default `ai_suggestion`) opcionais. **`no_split` e ignorado na importacao** (so 
 ```
 Variaveis suportadas no `message`: `{{lead.name}}`, `{{lead.phone}}`, `{{lead.email}}`.
 
+### 3.4 EXEMPLO COMPLETO end-to-end (copie a forma de entrega)
+
+> Um agente inteiro montado, no formato em que ele REALMENTE e entregue: campos manuais em
+> texto + 1 arquivo JSON por bloco importavel + tools + fonte + knobs. Este e o "molde da
+> maquina montada" — adapte o conteudo ao negocio, mantenha a estrutura.
+
+**Descoberta (resumo):** Clinica OdontoSorriso, avaliacao gratuita. 2 dentistas
+(Dra. Marina, Dr. Paulo) cadastrados em `user_services` p/ o servico "avaliacao". Objetivo do
+agente: qualificar a necessidade e **agendar a avaliacao**. Canal WhatsApp, agente unico primario.
+
+**(a) Campos MANUAIS (digitar no editor — Cadastro / Personalidade / Apresentacao):**
+- Cadastro (`identity`): agent_name=`Lia`, company=`OdontoSorriso`, segment=`Odontologia`,
+  channel=`WhatsApp`, region=`Sao Paulo`, goal=`agendar uma avaliacao gratuita`.
+- Personalidade: `tone.preset = consultive_empathic`; traits: `acolhedora`, `objetiva`,
+  `sem jargao tecnico`.
+- Apresentacao (`master_prompt`): "Voce e a Lia, recepcao da {{company}}. Acolhe quem chega com
+  duvida sobre tratamento, entende a necessidade em 1–2 perguntas e conduz pra uma avaliacao
+  gratuita. Fala simples, como uma recepcionista experiente — nunca da diagnostico nem preco
+  fechado de tratamento."
+
+**(b) Roteiro de Abordagem** — arquivo JSON (Importar → Substituir):
+```json
+[
+  {
+    "title": "Fase 1 · Abertura",
+    "profile_label": "Oi! Aqui e a Lia, da {{company}}. Como posso te ajudar hoje?",
+    "description": "Cumprimente pelo nome quando houver\nFaca UMA pergunta de abertura sobre o que a pessoa precisa\nNao liste servicos nem precos de cara"
+  },
+  {
+    "title": "Fase 2 · Entender a necessidade",
+    "profile_label": "Entendi! Faz tempo que sente isso? Ja passou com dentista por causa disso?",
+    "description": "Identifique a queixa principal (dor, estetica, rotina)\nNo maximo 2 perguntas curtas\nValide com empatia antes de oferecer a avaliacao"
+  },
+  {
+    "title": "Fase 3 · Oferecer a avaliacao",
+    "profile_label": "O melhor caminho e uma avaliacao gratuita pra um dentista te examinar e montar um plano. Posso ver os horarios?",
+    "description": "Explique que a avaliacao e gratuita e sem compromisso\nQuando a pessoa topar, chame `offer_appointment_slots` com type_slug `avaliacao`\nNAO escreva horarios em texto — o menu mostra os horarios e o profissional"
+  },
+  {
+    "title": "Fase 4 · Fora do escopo",
+    "profile_label": "Certo, ja ja damos continuidade por aqui.",
+    "description": "Quando o lead foge do assunto ou pede um humano, responda curto e chame `stop_agent`\nNao prometa prazo de retorno\nNunca de diagnostico ou preco de tratamento por aqui"
+  }
+]
+```
+
+**(c) Regras Gerais** (`prohibited_actions`) — arquivo JSON:
+```json
+[
+  "Nunca dar diagnostico odontologico nem afirmar qual tratamento a pessoa precisa.",
+  "Nunca prometer preco, desconto ou prazo de tratamento — isso e definido na avaliacao.",
+  "Sempre conduzir pra um proximo passo concreto: agendar a avaliacao ou transferir.",
+  "Nunca usar travessao (— ou –); use virgula ou dois-pontos."
+]
+```
+
+**(d) Templates** — arquivo JSON:
+```json
+[
+  {
+    "key": "saudacao",
+    "name": "Saudacao inicial",
+    "usage": "Primeira resposta ao lead novo.",
+    "mode": "ai_suggestion",
+    "message": "Oi {{lead.name}}! Aqui e a Lia, da OdontoSorriso. Me conta: o que voce esta sentindo ou querendo resolver?"
+  }
+]
+```
+
+**(e) Fonte estruturada** (`structured_sources`, tipo `json`, `data_type: services`) — modal, 1 por vez:
+```json
+{ "servicos": [
+  { "nome": "Avaliacao", "slug": "avaliacao", "duracao_min": 30, "valor": "gratuita" },
+  { "nome": "Limpeza", "slug": "limpeza", "valor": "a definir na avaliacao" }
+] }
+```
+
+**(f) Tools** (so as necessarias, no `enabled_tools` do flow): `offer_appointment_slots`,
+`add_tag` (ex: tag `avaliacao-oferecida`), `transfer_to_user`, `stop_agent`.
+
+**(g) Knobs:** `model = gpt-5-mini`; `debounce_window_ms = 10000`;
+`humanization.split_enabled = true` (threshold ~200, delay 2s); `validation.blocked_promises`
+inclui "desconto", "gratis o tratamento", "preco"; `guardrails.allow_human_handoff = true`;
+`on_appointment_created_stage_id` = etapa "Avaliacao agendada"; **`status = draft`** ate testar
+no Simulador.
+
+> Note como o agendamento aqui NAO usa Google Calendar: as tools de agenda nativa leem
+> `agenda_services` (slug `avaliacao`) + `availability_rules` dos 2 dentistas. Como ha 2
+> profissionais em `user_services`, `offer_appointment_slots` manda primeiro o menu de
+> profissional e depois os horarios — sem nenhuma config extra.
+
 ---
 
 ## 4. Tools — tabela `agent_tools`
@@ -176,7 +272,7 @@ Um-para-muitos com `agent_configs`. Campos: `name` (unico por agente, snake_case
 `additionalProperties:false`), `execution_mode` (`native` | `n8n_webhook` | `mcp`),
 `native_handler`, `webhook_url`/`webhook_secret`, `mcp_server_id`, `is_enabled`.
 
-### Presets nativos (40+) por categoria
+### Presets nativos por categoria (catalogo real em `tool-presets.ts`)
 - **Handoff:** `stop_agent`, `close_conversation`
 - **Transferencia:** `transfer_to_user`, `transfer_to_agent`
 - **Tags:** `add_tag`, `remove_tag`
@@ -185,7 +281,23 @@ Um-para-muitos com `agent_configs`. Campos: `name` (unico por agente, snake_case
 - **Notificacao:** `trigger_notification`
 - **Midia:** `send_media`, `send_audio`
 - **Agendamento:** `create_appointment`, `list_lead_appointments`, `cancel_appointment`,
-  `reschedule_appointment`, `get_available_slots`, `confirm_appointment`
+  `reschedule_appointment`, `get_available_slots`, `confirm_appointment`,
+  `offer_appointment_slots`
+  - **`offer_appointment_slots`** (jun/2026, PR #494): envia os horarios livres como
+    **menu interativo** (lista WhatsApp via `provider.sendMenu`). Cada item carrega um id
+    codificado `agbk:<epochMin>:<duration>:<slug>:<userId>`; quando o lead **toca**, o
+    `incoming-pipeline` faz o booking DETERMINISTICO (`lib/agenda/slot-menu-booking.ts` →
+    reaproveita `createAppointmentHandler`, revalida disponibilidade+conflito) — sem a IA
+    reconfirmar. **O tap E o agendamento** (mata o Bug #7 de alucinacao de confirmacao).
+    Input: `type_slug` (recomendado), `start_date?`, `days_ahead?` (1-14), `duration_minutes?`,
+    `intro_text?`. **Multi-profissional:** servico com >1 profissional elegivel
+    (`user_services` N:N ∩ `availability_rules` default) → menu de PROFISSIONAL primeiro
+    (id `agpro:<slug>:<userId>`), depois horarios do escolhido; o profissional escolhido e
+    forcado via `create_appointment.user_id` (override INTERNO, nao exposto ao LLM).
+    **Fallback texto** p/ Meta Cloud/Instagram. Guardrail de prompt injetado pelo runtime
+    (`flow/runner.ts`): "sempre ofertar via menu, nunca escrever horarios em texto".
+    Aditivo, **sem migration**, opt-in. Pre-req: `agenda_services` + `availability_rules`
+    (+ `user_services` p/ multi-prof).
 - **Funil:** `move_pipeline_stage`
 - **Controle de fluxo:** `emit_event` (ramifica pra saidas nomeadas de no)
 - **Lead:** `set_lead_custom_field`

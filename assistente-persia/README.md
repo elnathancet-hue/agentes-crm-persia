@@ -37,7 +37,7 @@ Passo a passo completo de import → teste → ativação em [`06-config-e-ativa
 - **Persona Pérsia**, tom Consultivo & Empático, uma pergunta por mensagem, sem textão, **sem travessão** (estilo WhatsApp).
 - **Modelo** `gpt-5-mini`, agente **primário** (porta de entrada do WhatsApp).
 - **Preço blindado:** "sob consulta" é Regra Geral + `blocked_promises` na validação (reescreve se a IA escapar).
-- **Agendamento híbrido:** tenta marcar no Calendar; se travar ou o lead pedir gente, transfere.
+- **Agendamento na agenda nativa da plataforma:** `offer_appointment_slots` manda os horários como menu interativo no WhatsApp e o lead toca pra agendar (sem Google Calendar); se travar ou pedir gente, transfere.
 - **Roteiro com 7 fases** (Abertura → Qualificação → Valor → Agendar → **Objeções** → Pós → **Fora do escopo → `stop_agent`**).
 - **Conhecimento** via fonte estruturada (planos sem preço) — sem RAG, que seria exagero aqui.
 

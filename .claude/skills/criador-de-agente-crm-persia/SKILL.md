@@ -73,6 +73,10 @@ Prefira `structured_prompt_config` ao `system_prompt` cru. Preencha:
 O sistema compila isso num `system_prompt` final com data atual, identidade, tom, objetivo,
 fluxo comercial e proibicoes. Detalhes da compilacao em `references/config-completo.md`.
 
+> 📋 **Exemplo completo montado** (um agente inteiro no formato de entrega: campos manuais +
+> 1 JSON por bloco + tools + fonte + knobs): `references/config-completo.md` **secao 3.4**.
+> Copie a FORMA, adapte o conteudo.
+
 > **Como o editor recebe os dados:** o structured prompt NAO e um JSON unico. **Cadastro,
 > Personalidade e Apresentacao sao campos de FORMULARIO (digitar)**; so **Roteiro, Regras Gerais
 > e Templates** tem botao "Importar JSON" (shape proprio cada um) e **Fonte estruturada** entra
@@ -86,9 +90,18 @@ fluxo comercial e proibicoes. Detalhes da compilacao em `references/config-compl
 > e `allow_human_handoff: true`. Texto-modelo pronto em `references/config-completo.md` secao 3.2.
 
 ### 4. Tools (o que faz o agente AGIR)
-Um agente que so conversa nao converte. Anexe **tools nativas** (40+ presets prontos) pelos
-casos de uso levantados na descoberta:
-- Agendamento: `create_appointment`, `get_available_slots`, `reschedule_appointment`, `cancel_appointment`, `confirm_appointment` (requer `calendar_connection_id`).
+Um agente que so conversa nao converte. Anexe **tools nativas** (catalogo completo em
+`tool-presets.ts` / `references/config-completo.md` secao 4) pelos casos de uso da descoberta:
+- **Agenda NATIVA** (usa `agenda_services` + `availability_rules` da org — **NAO** precisa de
+  Google/`calendar_connection_id`): `offer_appointment_slots`, `create_appointment`,
+  `get_available_slots`, `reschedule_appointment`, `cancel_appointment`, `confirm_appointment`,
+  `list_lead_appointments`.
+  - **`offer_appointment_slots` (recomendado p/ marcar reuniao):** manda os horarios como
+    **menu interativo** (lista do WhatsApp) — o lead **toca** e o agendamento e feito sozinho
+    (booking deterministico; o tap E o agendamento, fecha o bug de alucinacao de confirmacao).
+    Suporta escolha de profissional (multi-prof) e fallback texto. Quando habilitar, instrua a
+    IA a SO ofertar via menu (nunca digitar horarios). Detalhes em config-completo secao 4.
+- **Google Calendar:** `schedule_event` — este SIM exige `calendar_connection_id` configurado.
 - Funil/CRM: `move_pipeline_stage`, `add_tag`/`remove_tag`, `set_lead_custom_field`, `assign_product`/`assign_department`.
 - Humano: `transfer_to_user`, `transfer_to_agent`, `stop_agent`, `close_conversation`, `trigger_notification`.
 - Distribuicao: `round_robin_user`/`round_robin_agent`.
@@ -154,7 +167,8 @@ Antes de dar qualquer JSON pro usuario, confira item a item — e o que evita re
 - [ ] **Templates:** cada um tem `key` (so `[a-z0-9_]`, sem espaco), `name`, `message`? `mode`
   valido? Nao contei com `no_split` no import (e ignorado)?
 - [ ] **Tools:** so as necessarias, `snake_case`, e estao no `enabled_tools` do flow? `stop_agent`
-  presente p/ a fase de escopo? Agendamento exige `calendar_connection_id` configurado?
+  presente p/ a fase de escopo? Agenda nativa exige `agenda_services` + `availability_rules` (NAO
+  `calendar_connection_id`); so `schedule_event` (Google) precisa de `calendar_connection_id`.
 - [ ] **Validacao:** `blocked_promises` cobre o que o agente nao pode prometer (preco/desconto/prazo)?
 - [ ] **Status `draft`** ate testar no Simulador? Lembrei que webhook/agendamento real so roda no
   WhatsApp, nao no Simulador?
