@@ -119,6 +119,54 @@ Modelo (adapte `profile_label`/empresa ao caso):
 Requer a tool `stop_agent` habilitada e no `enabled_tools` do flow, e `allow_human_handoff: true`
 nos guardrails (senao `stop_agent` vira no-op).
 
+### 3.3 Exemplos KNOWN-GOOD (copie a forma, adapte o conteudo)
+
+> Estes shapes batem com os validadores reais (`parseRulesJson`, `parseGeneralRulesJson`,
+> `parseTemplateJson`). Se o seu JSON nao parece com isto, **vai falhar a importacao.**
+
+**Roteiro de Abordagem** — array; cada fase: `title` (obrigatorio), `profile_label` (uma FRASE
+MODELO que o agente usaria, em 1a pessoa, NAO um rotulo descritivo), `description` (**STRING**;
+bullets separados por `\n`, nao array). `id` opcional. `{{company}}` etc. sao interpolados.
+```json
+[
+  {
+    "title": "Fase 1 · Abertura",
+    "profile_label": "Oi! Aqui e a Ana, do time da {{company}}. Como posso te ajudar hoje?",
+    "description": "Cumprimente pelo nome e se apresente\nFaca apenas uma pergunta de abertura\nEscute antes de oferecer"
+  },
+  {
+    "title": "Fase 2 · Fora do escopo",
+    "profile_label": "Certo, ja ja damos continuidade por aqui.",
+    "description": "Quando o lead foge do assunto ou pede um humano, responda curto e chame `stop_agent`\nNao prometa prazo de retorno"
+  }
+]
+```
+
+**Regras Gerais** (`prohibited_actions`) — array de **STRINGS** simples (nao objetos):
+```json
+[
+  "Nunca prometer desconto, condicao especial ou prazo que nao foi confirmado.",
+  "Nunca usar travessao (— ou –); use virgula, dois-pontos ou reticencias.",
+  "Sempre dar um proximo passo concreto: agendar ou transferir."
+]
+```
+
+**Templates** (`message_templates`) — array; `key` (obrigatorio, so `[a-z0-9_]`, sem espaco),
+`name` (obrigatorio), `message` (obrigatorio). `usage` e `mode` (`ai_suggestion`|`fixed_response`,
+default `ai_suggestion`) opcionais. **`no_split` e ignorado na importacao** (so toggle na UI):
+```json
+[
+  {
+    "key": "saudacao",
+    "name": "Saudacao inicial",
+    "usage": "Primeira resposta ao lead novo.",
+    "mode": "ai_suggestion",
+    "message": "Oi {{lead.name}}! Que bom falar com voce. Me conta: como posso ajudar?"
+  }
+]
+```
+Variaveis suportadas no `message`: `{{lead.name}}`, `{{lead.phone}}`, `{{lead.email}}`.
+
 ---
 
 ## 4. Tools — tabela `agent_tools`

@@ -34,6 +34,13 @@ descoberta curta, depois config incremental. A maioria dos agentes ruins tem pro
 gigante e zero tools — o contrario do que converte. Prefira **structured prompt + tools
 nativas** a um `system_prompt` cru e gigante.
 
+> **Portabilidade / fonte de verdade:** o ideal e confirmar campos no monorepo
+> (`packages/shared` + `packages/ai-agent-ui`). Quando ele NAO estiver disponivel (skill rodando
+> sozinha, repo clonado), **NAO invente nem chute valores** — use os shapes ja fixados em
+> `references/config-completo.md` secao 3.1 (formas de import) e 3.3 (exemplos known-good) como
+> fonte de verdade, e avise o usuario que os limites numericos (ranges/defaults) refletem jun/2026
+> e podem ter mudado por migration.
+
 ---
 
 ## Fluxo de criacao (siga nesta ordem)
@@ -133,6 +140,26 @@ Configure `humanization_config`:
   uso correto das tools, respeito as proibicoes, tamanho das mensagens.
 
 ---
+
+## Checklist de validacao (rode ANTES de entregar o JSON)
+
+Antes de dar qualquer JSON pro usuario, confira item a item — e o que evita retrabalho:
+
+- [ ] **Separei manual × JSON?** Cadastro/Personalidade/Apresentacao em TEXTO (digitar);
+  Roteiro/Regras/Templates como arquivos JSON separados; Fonte por modal. **Nunca** um mega-JSON.
+- [ ] **Roteiro:** e um `array`? cada fase tem `title`? `description` e **STRING** (bullets `\n`),
+  NAO array? `profile_label` e uma FRASE em 1a pessoa, nao um rotulo?
+- [ ] **Tem a fase "Fora do escopo" → `stop_agent`** como ultima fase? (secao 3.2)
+- [ ] **Regras Gerais:** e um `array` de **strings** (nao objetos)?
+- [ ] **Templates:** cada um tem `key` (so `[a-z0-9_]`, sem espaco), `name`, `message`? `mode`
+  valido? Nao contei com `no_split` no import (e ignorado)?
+- [ ] **Tools:** so as necessarias, `snake_case`, e estao no `enabled_tools` do flow? `stop_agent`
+  presente p/ a fase de escopo? Agendamento exige `calendar_connection_id` configurado?
+- [ ] **Validacao:** `blocked_promises` cobre o que o agente nao pode prometer (preco/desconto/prazo)?
+- [ ] **Status `draft`** ate testar no Simulador? Lembrei que webhook/agendamento real so roda no
+  WhatsApp, nao no Simulador?
+
+Se algum item falhar, o import quebra ou o agente se comporta mal. Nao entregue antes de fechar todos.
 
 ## Anti-patterns (corrija quando vir)
 - **Prompt monolitico de 2000 linhas sem tools** → migre pra structured prompt + tools nativas.
