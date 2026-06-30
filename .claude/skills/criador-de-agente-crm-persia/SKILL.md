@@ -110,6 +110,22 @@ Um agente que so conversa nao converte. Anexe **tools nativas** (catalogo comple
 Regras: nome `snake_case`, unico por agente; so habilite o que o agente realmente precisa
 (menos tools = decisao melhor). Tools customizadas podem ser `n8n_webhook` ou `mcp`.
 
+> ⚠️ **Como habilitar uma tool DE VERDADE (UI real, jun/2026):** o cliente liga tools pelo card
+> **"Ferramentas do agente"** (componente `QuickToolsCard`) dentro da aba **Regras / "Como o
+> agente decide"** — toggles 1-clique: *Etiquetar lead · Mover no funil · **Agendar reuniao**
+> (= menu interativo `offer_appointment_slots`) · Enviar midia · Notificar equipe*. **NAO existe
+> um modal "Inteligencia de Decisao" navegavel** (`DecisionIntelligenceModal` esta no codigo mas
+> NAO esta plugado na tela). Tools fora desses 5 toggles (reschedule/cancel/confirm/transfer/
+> round_robin/get_available_slots) so via aba **Ferramentas**, que e **gated por flag**
+> `native_agent_tools_ui` (default OFF) — pra a maioria das orgs, ainda nao ha UI; precisa do
+> flag ON (admin) ou habilitar no DB. **Mencionar a tool no roteiro com `@` NAO habilita** —
+> o dropdown do `@` so lista tools JA habilitadas (`tools.filter(is_enabled)`). Ordem certa:
+> 1) ligar a tool no card; 2) salvar; 3) so entao referenciar com `@` no roteiro.
+>
+> Gate de codigo: presets so sao habilitaveis se `shipped_in_pr` estiver em `ENABLED_PRESET_PRS`
+> (`apps/crm/src/actions/ai-agent/tools.ts`). Ao criar preset novo, **adicionar o PR nesse set**
+> ou `setNativeToolEnabled`/`createToolFromPreset` rejeitam ("disponivel apenas em <PR>").
+
 ### 5. Conhecimento (knowledge / structured sources)
 - **Dados estruturados pequenos** (precos, produtos, servicos): use `structured_sources` tipo
   `json` inline — injetado direto no prompt, sem custo de embedding.

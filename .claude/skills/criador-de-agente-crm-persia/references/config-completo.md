@@ -456,6 +456,19 @@ Coisas que travam de verdade ao montar um agente, em ordem de quanto custam temp
    FLOW (allowlist por canvas, persistido ao **salvar o canvas**). Excecao: tools `n8n_webhook`
    com `is_enabled=true` sao auto-incluidas (jun/2026, runner.ts ~326) — mas isso e recente;
    build antiga exige a tool no `enabled_tools`. Sintoma de tool ausente: agente diz "vou verificar".
+   - **Onde se LIGA uma tool (UI real):** card **"Ferramentas do agente"** (`QuickToolsCard`) na
+     aba **Regras** — 5 toggles: Etiquetar / Mover no funil / **Agendar reuniao** (= menu
+     interativo `offer_appointment_slots`) / Enviar midia / Notificar equipe. **Nao existe modal
+     "Inteligencia de Decisao" navegavel** (`DecisionIntelligenceModal` = codigo morto, nao
+     plugado). Tools fora dos 5 → aba **Ferramentas** gated por flag `native_agent_tools_ui`
+     (default OFF).
+   - **Mencionar com `@` no roteiro NAO habilita** — o dropdown do `@` so lista tools JA
+     habilitadas (`RulesTab.tsx`: `tools.filter(is_enabled)`). Se a tool nao aparece no `@`, ela
+     nao foi ligada no card (ou o preset esta gated — ver abaixo).
+   - **Gate de PR:** `setNativeToolEnabled`/`createToolFromPreset` so aceitam presets cujo
+     `shipped_in_pr` esta em `ENABLED_PRESET_PRS` (`apps/crm/src/actions/ai-agent/tools.ts`).
+     Preset novo cujo PR nao esta no set → erro "disponivel apenas em <PR>". Ao shippar preset,
+     adicionar o PR la (jun/2026: `PR-AGENDA-COMPLETE` incluido p/ destravar `offer_appointment_slots`).
 4. **UI de tool webhook custom esta atras de feature flag** `native_agent_tools_ui` (default OFF,
    feature-flags.ts). Sem a flag, a aba Ferramentas e placeholder. O componente
    (`CustomWebhookToolSheet`) existe mas pode nao estar plugado. Allowlist de hostname e obrigatoria

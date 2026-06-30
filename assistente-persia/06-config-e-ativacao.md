@@ -12,22 +12,39 @@ editor (não é JSON de importação). Valores recomendados abaixo.
 | Agente primário | **Sim** (`is_primary`) — é a porta de entrada do WhatsApp | aba de configuração |
 | Debounce | `12000` ms | aba Regras |
 
-## Ferramentas (habilitar e liberar no canvas/flow)
-Habilitar e garantir no `enabled_tools` do flow:
-`offer_appointment_slots` (**principal de agendamento**), `reschedule_appointment`,
-`cancel_appointment`, `confirm_appointment`, `list_lead_appointments`, `move_pipeline_stage`,
-`add_tag`, `set_lead_custom_field`, `round_robin_user`, `transfer_to_user`,
-`trigger_notification`, `stop_agent`.
+## Ferramentas — como habilitar de verdade (UI real)
 
-> **Agendamento = agenda NATIVA da plataforma (não Google Calendar).** `offer_appointment_slots`
-> manda os horários como **menu interativo** no WhatsApp; o lead **toca** e o agendamento é feito
-> sozinho (booking determinístico — não reconfirme). Se houver mais de um especialista, o menu
-> pergunta o profissional primeiro. **Pré-requisito na org:** ter o serviço `reuniao` em
-> `agenda_services` + `availability_rules` (horários) configurados — e `user_services` se for
-> multi-especialista. **Não** precisa de `calendar_connection_id` (isso é só do `schedule_event`/Google).
+As tools se ligam pelo card **"Ferramentas do agente"** na aba **Regras** ("Como o agente decide").
+**Atenção:** só 5 tools têm toggle 1-clique; o resto exige a flag `native_agent_tools_ui` (default
+**OFF**) na aba **Ferramentas**.
 
-> ⚠️ Criar a tool ≠ tool disponível pro LLM. O runtime só expõe as que estão no `enabled_tools`
-> do **canvas** (salve o canvas). Sintoma de tool faltando: o agente diz "vou verificar" e não age.
+**Nível 1 — toggles 1-clique (qualquer org, sem flag):**
+- **Agendar reunião** = `offer_appointment_slots` ✅ (principal de agendamento)
+- **Etiquetar lead** = `add_tag`
+- **Mover no funil** = `move_pipeline_stage`
+- **Notificar equipe** = `trigger_notification`
+- (Enviar mídia = `send_media` — não usado pela Pérsia)
+
+**Nível 2 — exigem a flag `native_agent_tools_ui` ON (aba Ferramentas, admin/DB):**
+- **Handoff:** `transfer_to_user`, `stop_agent` ← a fase "Fora do escopo" depende do `stop_agent`
+- **Agenda de apoio:** `reschedule_appointment`, `cancel_appointment`, `confirm_appointment`,
+  `get_available_slots`, `list_lead_appointments`
+- **Distribuição:** `round_robin_user` · **Lead:** `set_lead_custom_field`
+
+> ⚠️ **Sem a flag, a Pérsia faz o essencial** (qualificar, **agendar reunião**, etiquetar, mover no
+> funil, notificar), mas **não** consegue transferir pra humano, parar (`stop_agent`) nem
+> remarcar/cancelar. Pra o agente ficar completo (handoff + remarcar), peça ao admin pra ligar
+> `native_agent_tools_ui`. Enquanto não ligar, ajuste o roteiro pra não depender dessas tools.
+
+> ⚠️ **Mencionar a tool com `@`/crase no roteiro NÃO a habilita.** O dropdown do `@` só lista o
+> que já está ligado. **Ordem certa:** 1) ligar a tool no card; 2) salvar; 3) só então referenciar
+> no roteiro. Sintoma de tool não ligada: o agente diz "vou verificar" e não age.
+
+> **Agendamento = agenda NATIVA (não Google Calendar).** `offer_appointment_slots` manda os
+> horários como **menu interativo**; o lead **toca** e agenda sozinho (booking determinístico, não
+> reconfirme). Multi-especialista → menu de profissional primeiro. **Pré-req na org:** serviço
+> `reuniao` em `agenda_services` + `availability_rules` (+ `user_services` se multi). **Não** usa
+> `calendar_connection_id` (isso é só do `schedule_event`/Google).
 
 ## Humanização
 - `split_enabled`: ligado · `split_threshold_chars`: 220 · `split_delay_seconds`: 2
@@ -72,7 +89,9 @@ Habilitar e garantir no `enabled_tools` do flow:
 
 ## 3. Config + tools
 - [ ] Modelo, escopo, `is_primary`, debounce, humanização, validação, followups, guardrails (valores acima).
-- [ ] Liberar as tools no `enabled_tools` do **canvas** e salvar o canvas.
+- [ ] **Tools nível 1** (card *Ferramentas do agente*, aba Regras): ligar **Agendar reunião**, **Etiquetar lead**, **Mover no funil**, **Notificar equipe** → **Salvar**.
+- [ ] **Tools nível 2** (handoff, remarcar/cancelar etc.): exigem a flag `native_agent_tools_ui` ON (admin/DB) → aba **Ferramentas**. Sem a flag, a Pérsia não transfere nem para (`stop_agent`).
+- [ ] Só referenciar tool com `@` no roteiro **depois** de ligada (o `@` só lista o que já está ligado).
 - [ ] **Agenda nativa:** serviço `reuniao` em `agenda_services` + `availability_rules` (e `user_services` se multi-especialista) + os 2 stages do funil.
 
 ## 4. Testar (Simulador)
