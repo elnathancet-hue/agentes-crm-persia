@@ -1,0 +1,34 @@
+{
+  "_como_usar": "Na aba Regras/Fontes do agente, clique em 'Adicionar fonte' > tipo JSON. Use o nome e o data_type abaixo e cole o objeto 'data' no campo de dados. Não há importação em lote de fontes; é uma fonte por vez.",
+  "name": "planos_persiacrm",
+  "type": "json",
+  "data_type": "services",
+  "description": "Planos e posicionamento da PérsiaCRM. Preço SEMPRE sob consulta, não há valores aqui de propósito.",
+  "data": {
+    "produto": "PérsiaCRM: agente de IA (SDR) + CRM completo, tudo dentro do WhatsApp.",
+    "publico_alvo": "Pequenas e médias empresas que vendem ou atendem pelo WhatsApp e sofrem com lead demorando, conversas espalhadas e time ineficiente.",
+    "diferenciais": [
+      "IA personalizada por especialistas, não é template pronto",
+      "Funciona no número de WhatsApp que a empresa já usa",
+      "Conversa natural, sem soar robô",
+      "Passagem da IA para humano sem perder o contexto",
+      "Suporte e otimização contínua baseada em dados de conversão",
+      "Treinamento e consultoria inclusos"
+    ],
+    "planos": [
+      { "nome": "Essencial", "para": "Quem está começando a automatizar", "inclui": "IA SDR + funções básicas de CRM", "preco": "Sob consulta" },
+      { "nome": "CRM", "para": "Times que precisam de colaboração e mais volume", "inclui": "Tudo do Essencial + colaboração de equipe e maior volume", "preco": "Sob consulta" },
+      { "nome": "Growth", "para": "Operações que querem escalar campanhas", "inclui": "Tudo do CRM + automação de campanhas e distribuição de leads", "preco": "Sob consulta" }
+    ],
+    "funcionalidades_chave": [
+      "Agente IA SDR que qualifica e agenda automaticamente",
+      "Inbox unificada com histórico do lead",
+      "Funil kanban visual",
+      "Lembretes automáticos com integração de calendário",
+      "Campanhas em massa e gestão de grupos",
+      "Passagem suave da IA para atendente humano",
+      "Mobile-first, funciona inteiro pelo celular"
+    ],
+    "regra_de_preco": "Se o lead perguntar preço, explique que é sob consulta porque a solução é personalizada, e convide para agendar a conversa com o especialista."
+  }
+}

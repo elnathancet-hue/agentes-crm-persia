@@ -1,0 +1,44 @@
+[
+  {
+    "key": "saudacao_abertura",
+    "name": "Saudação / Abertura",
+    "usage": "Primeira resposta ao lead que chegou do site clicando em Falar com especialista.",
+    "mode": "ai_suggestion",
+    "message": "Oi {{lead.name}}, aqui é a Pérsia, do time da PérsiaCRM 🙂 Que bom te ver por aqui! Me conta rapidinho: hoje você já atende seus clientes pelo WhatsApp?"
+  },
+  {
+    "key": "planos_resumo",
+    "name": "Resumo dos planos (sem preço)",
+    "usage": "Quando o lead pede para entender os planos. Não contém valores, preço é sob consulta.",
+    "mode": "ai_suggestion",
+    "message": "A gente tem três caminhos, e o ideal depende do seu momento:\n\n• *Essencial*: IA SDR + CRM básico, pra quem está começando a automatizar.\n• *CRM*: colaboração de equipe e mais volume, pra times.\n• *Growth*: automação de campanhas e distribuição de leads, pra escalar.\n\nOs valores são sob consulta porque a IA é personalizada pro seu negócio. O melhor é eu agendar uma conversa rápida com um especialista pra montar a proposta certa pra você. Posso ver um horário?"
+  },
+  {
+    "key": "preco_sob_consulta",
+    "name": "Resposta a pergunta de preço",
+    "usage": "Quando o lead insiste no valor. Reforça sob consulta e puxa pro agendamento.",
+    "mode": "ai_suggestion",
+    "message": "Sobre valores eu prefiro não chutar nada, {{lead.name}}. Os planos são personalizados e sob consulta, e o especialista monta a proposta certinha na conversa. Bora marcar? É rapidinho."
+  },
+  {
+    "key": "handoff_especialista",
+    "name": "Passagem para especialista humano",
+    "usage": "Disparado junto do transfer_to_user ou round_robin_user quando o lead quer falar com pessoa ou o agendamento trava.",
+    "mode": "fixed_response",
+    "message": "Perfeito, {{lead.name}}! Já estou te passando para um especialista do time, que vai continuar daqui com você. Só um instante 🙌"
+  },
+  {
+    "key": "agendamento_confirmado",
+    "name": "Confirmação de agendamento",
+    "usage": "Depois de create_appointment, para confirmar e tranquilizar o lead.",
+    "mode": "ai_suggestion",
+    "message": "Fechado! Deixei agendado e você vai receber o lembrete por aqui mesmo. Qualquer coisa antes disso, é só me chamar. Até lá, {{lead.name}}! 🙂"
+  },
+  {
+    "key": "sem_fit_encerramento",
+    "name": "Encerramento sem fit",
+    "usage": "Quando o lead não tem fit ou não tem intenção. Encerra com educação, sem forçar.",
+    "mode": "ai_suggestion",
+    "message": "Entendi, {{lead.name}}! Sem problema. Se em algum momento quiser organizar seu atendimento no WhatsApp, a porta fica aberta: é só me chamar. Tudo de bom! 🙂"
+  }
+]
