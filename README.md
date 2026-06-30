@@ -41,6 +41,13 @@ Passo a passo completo de import → teste → ativação em [`06-config-e-ativa
 - **Roteiro com 7 fases** (Abertura → Qualificação → Valor → Agendar → **Objeções** → Pós → **Fora do escopo → `stop_agent`**).
 - **Conhecimento** via fonte estruturada (planos sem preço) — sem RAG, que seria exagero aqui.
 
+## Skill incluída no repo
+A skill `criador-de-agente-crm-persia` está em [`.claude/skills/`](.claude/skills/), então ao
+**clonar este repo** (com o Claude Code instalado) ela fica disponível automaticamente neste
+projeto — útil pra ajustar/recriar o agente em outra máquina. Conteúdo: `SKILL.md` +
+`references/config-completo.md` (texto autocontido; os caminhos do monorepo citados são só
+referência, não precisam estar presentes).
+
 ## Formato confirmado no código
 `packages/ai-agent-ui/src/components/StructuredPromptEditor.tsx` e `RulesTab.tsx`:
 - **Roteiro:** array `[{ "title"*, "profile_label", "description" }]` (`description` é **string**, bullets em `\n`).
