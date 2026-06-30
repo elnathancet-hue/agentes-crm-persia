@@ -38,7 +38,7 @@ Passo a passo completo de import → teste → ativação em [`06-config-e-ativa
 - **Modelo** `gpt-5-mini`, agente **primário** (porta de entrada do WhatsApp).
 - **Preço blindado:** "sob consulta" é Regra Geral + `blocked_promises` na validação (reescreve se a IA escapar).
 - **Agendamento híbrido:** tenta marcar no Calendar; se travar ou o lead pedir gente, transfere.
-- **Roteiro com 6 fases**, incluindo a fase padrão **Fora do escopo → `stop_agent`** (sempre existe).
+- **Roteiro com 7 fases** (Abertura → Qualificação → Valor → Agendar → **Objeções** → Pós → **Fora do escopo → `stop_agent`**).
 - **Conhecimento** via fonte estruturada (planos sem preço) — sem RAG, que seria exagero aqui.
 
 ## Formato confirmado no código
