@@ -43,3 +43,7 @@ tmp/
 temp/
 *.tmp
 *.bak
+
+# Backups locais e settings de máquina
+_backup/
+.claude/settings.local.json
